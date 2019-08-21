@@ -78,30 +78,34 @@ def label(manifestDict, alertFile):
 
     # iterate through each flaw element in alertFile
     for errorElement in root.findall('./errors/error'):
-        for location in errorElement:
-            path = location.attrib['file']
-            line = location.attrib['line']
+        
+        paths = []
+        lines = []
 
-        #if manifest declared there is an error in that file
-        #also the ffsa raised an alert regarding that file
-        if path in manifestDict:
-            errorList = manifestDict[path]
-            found = 0
-            indexToBeUpdated =0
-            for idx,error in enumerate(errorList):
-                key = 'cwe'
-                if key in errorElement.attrib and errorElement.attrib['cwe']==error['cwe'] and line==error['line']:
-                    found = found + 1
-                    indexToBeUpdated = idx
-                    break
-            
-            if found == 0:
-                manifestDict[path][indexToBeUpdated]['false positive'] = '1'
-                manifestDict[path][indexToBeUpdated]['false negative'] = '0'
-            else:
-                #print("here")
-                manifestDict[path][indexToBeUpdated]['true positive'] = '1'
-                manifestDict[path][indexToBeUpdated]['false negative'] = '0'
+        for location in errorElement:
+            paths.append(location.attrib['file'])
+            lines.append(location.attrib['line'])
+
+        for index,path in enumerate(paths):
+            #ffsa raised same alert in the same place the manifest mentioned
+            if path in manifestDict:
+                errorList = manifestDict[path]
+                found = 0
+                indexToBeUpdated =0
+                for idx,error in enumerate(errorList):
+                    key = 'cwe'
+                    if key in errorElement.attrib and errorElement.attrib['cwe']==error['cwe'] and lines[index]==error['line']:
+                        found = found + 1
+                        indexToBeUpdated = idx
+                        break
+                
+                if found == 0:
+                    manifestDict[path][indexToBeUpdated]['false positive'] = '1'
+                    manifestDict[path][indexToBeUpdated]['false negative'] = '0'
+                else:
+                    #print("here")
+                    manifestDict[path][indexToBeUpdated]['true positive'] = '1'
+                    manifestDict[path][indexToBeUpdated]['false negative'] = '0'
     
     return manifestDict
         
@@ -110,14 +114,14 @@ def label(manifestDict, alertFile):
 def main():
 
     # parse xml file
-    itcList = parseXML('manifest.xml')
+    itcList = parseXML('manifestITC.xml')
     # print(itcList)
 
     # label data by comapring dictionary made from manifest with alert file
     itcList = label(itcList, "itc.xml")
 
     #save the updated dictionary in csv
-    savetoCSV(itcList, 'labelled.csv')
+    savetoCSV(itcList, 'labeledITC.csv')
 
 
 main()
