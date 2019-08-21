@@ -87,21 +87,32 @@ def label(manifestDict, alertFile):
             lines.append(location.attrib['line'])
 
         for index,path in enumerate(paths):
-            #ffsa raised same alert in the same place the manifest mentioned
+            #ffsa raised an alert in the same file the manifest mentioned
             if path in manifestDict:
                 errorList = manifestDict[path]
                 found = 0
                 indexToBeUpdated =0
                 for idx,error in enumerate(errorList):
                     key = 'cwe'
+                    if key not in errorElement.attrib:
+                        found = -1
+
                     if key in errorElement.attrib and errorElement.attrib['cwe']==error['cwe'] and lines[index]==error['line']:
-                        found = found + 1
+                        found = 1
                         indexToBeUpdated = idx
                         break
-                
+                #ffsa raised an alert that isn't mentioned in the manifest
+                #create a dictionary which represents that error and dub it false positive
                 if found == 0:
-                    manifestDict[path][indexToBeUpdated]['false positive'] = '1'
-                    manifestDict[path][indexToBeUpdated]['false negative'] = '0'
+                    newError = {'cwe':errorElement.attrib['cwe'],
+                                'short description':errorElement.attrib['msg'],
+                                'line':lines[index],
+                                'true positive':'0',
+                                'false positive':'1',
+                                'false negative':'0'
+                    }
+                    manifestDict[path].append(newError)
+                #true positive alert
                 else:
                     #print("here")
                     manifestDict[path][indexToBeUpdated]['true positive'] = '1'
