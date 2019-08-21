@@ -117,6 +117,18 @@ def label(manifestDict, alertFile):
                     #print("here")
                     manifestDict[path][indexToBeUpdated]['true positive'] = '1'
                     manifestDict[path][indexToBeUpdated]['false negative'] = '0'
+            #manifest says there is no error in this file
+            #so another false positive
+            else:
+                newError = {'cwe':errorElement.attrib['cwe'],
+                                'short description':errorElement.attrib['msg'],
+                                'line':lines[index],
+                                'true positive':'0',
+                                'false positive':'1',
+                                'false negative':'0'
+                    }
+                manifestDict[path]=[]
+                manifestDict[path].append(newError)
     
     return manifestDict
         
